@@ -11,6 +11,7 @@ CREATE TABLE patient (
     last_name VARCHAR(50) NOT NULL,
     date_of_birth DATE,
     gender VARCHAR(10),
+    age INT NOT NULL,
     contact_number VARCHAR(15),
     email VARCHAR(100),
     address TEXT,
