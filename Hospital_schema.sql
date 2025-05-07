@@ -6,13 +6,16 @@ CREATE TABLE patient (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     date_of_birth DATE,
-    gender VARCHAR(10),
+    gender VARCHAR(10) CHECK (gender IN ('Male', 'Female', 'Other')),
     age INT CHECK (age >= 0),
     contact_number VARCHAR(15),
     email VARCHAR(100),
     address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Index on patient_id for faster lookups
+CREATE INDEX idx_patient_id ON patient(patient_id);
 
 -- ====================================
 -- 2. Doctor Table
@@ -27,6 +30,9 @@ CREATE TABLE doctor (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Index on doctor_id for faster lookups
+CREATE INDEX idx_doctor_id ON doctor(doctor_id);
+
 -- ====================================
 -- 3. Appointment Table
 -- ====================================
@@ -36,11 +42,14 @@ CREATE TABLE appointment (
     doctor_id INT NOT NULL,
     appointment_date DATE NOT NULL,
     appointment_time TIME NOT NULL,
-    appointment_status VARCHAR(50) NOT NULL,
+    appointment_status VARCHAR(50) CHECK (appointment_status IN ('Scheduled', 'Completed', 'Cancelled')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
 );
+
+-- Index on appointment_id for faster lookups
+CREATE INDEX idx_appointment_id ON appointment(appointment_id);
 
 -- ====================================
 -- 4. Receptionist Table
@@ -78,6 +87,9 @@ CREATE TABLE laboratory (
     FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
 );
 
+-- Index on laboratory test_id for faster lookups
+CREATE INDEX idx_laboratory_test_id ON laboratory(test_id);
+
 -- ====================================
 -- 7. Staff Table
 -- ====================================
@@ -105,6 +117,9 @@ CREATE TABLE prescription (
     FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
 );
 
+-- Index on prescription_id for faster lookups
+CREATE INDEX idx_prescription_id ON prescription(prescription_id);
+
 -- ====================================
 -- 9. Administrator Table
 -- ====================================
@@ -131,6 +146,9 @@ CREATE TABLE medical_history (
     FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
 );
+
+-- Index on medical_history record_id for faster lookups
+CREATE INDEX idx_medical_history_id ON medical_history(record_id);
 
 -- ====================================
 -- 11. Medicine Table
@@ -162,7 +180,7 @@ CREATE TABLE room (
     patient_id INT NOT NULL,
     room_number INT NOT NULL,
     room_type VARCHAR(100),
-    status VARCHAR(50),
+    status VARCHAR(50) CHECK (status IN ('Occupied', 'Vacant')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE
 );
@@ -191,3 +209,4 @@ CREATE TABLE parking (
     exit_time TIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
