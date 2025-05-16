@@ -1,25 +1,24 @@
--- ====================================
--- 1. Patient Table
--- ====================================
+
+
+-- ===============================
+-- 1. Patient Table (base table)
+-- ===============================
 CREATE TABLE patient (
     patient_id SERIAL PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
+    age VARCHAR(3),
     date_of_birth DATE,
-    gender VARCHAR(10) CHECK (gender IN ('Male', 'Female', 'Other')),
-    age INT CHECK (age >= 0),
+    gender VARCHAR(10),
     contact_number VARCHAR(15),
     email VARCHAR(100),
     address TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index on patient_id for faster lookups
-CREATE INDEX idx_patient_id ON patient(patient_id);
-
--- ====================================
--- 2. Doctor Table
--- ====================================
+-- ===============================
+-- 2. Doctor Table (base table)
+-- ===============================
 CREATE TABLE doctor (
     doctor_id SERIAL PRIMARY KEY,
     first_name VARCHAR(50) NOT NULL,
@@ -27,43 +26,12 @@ CREATE TABLE doctor (
     speciality VARCHAR(100) NOT NULL,
     email VARCHAR(100),
     contact_no VARCHAR(15),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    inserted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index on doctor_id for faster lookups
-CREATE INDEX idx_doctor_id ON doctor(doctor_id);
-
--- ====================================
--- 3. Appointment Table
--- ====================================
-CREATE TABLE appointment (
-    appointment_id SERIAL PRIMARY KEY,
-    patient_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    appointment_date DATE NOT NULL,
-    appointment_time TIME NOT NULL,
-    appointment_status VARCHAR(50) CHECK (appointment_status IN ('Scheduled', 'Completed', 'Cancelled')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
-);
-
--- Index on appointment_id for faster lookups
-CREATE INDEX idx_appointment_id ON appointment(appointment_id);
-
--- ====================================
--- 4. Receptionist Table
--- ====================================
-CREATE TABLE receptionist (
-    receptionist_id SERIAL PRIMARY KEY,
-    receptionist_name VARCHAR(100) NOT NULL,
-    contact_no VARCHAR(15),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- ====================================
--- 5. Department Table
--- ====================================
+-- ===============================
+-- 3. Department Table (base table)
+-- ===============================
 CREATE TABLE department (
     department_id SERIAL PRIMARY KEY,
     department_name VARCHAR(100) NOT NULL,
@@ -71,69 +39,53 @@ CREATE TABLE department (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ====================================
--- 6. Laboratory Table
--- ====================================
-CREATE TABLE laboratory (
-    test_id SERIAL PRIMARY KEY,
-    patient_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    test_name VARCHAR(100),
-    test_date DATE NOT NULL,
-    test_time TIME NOT NULL,
-    test_result VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
-);
-
--- Index on laboratory test_id for faster lookups
-CREATE INDEX idx_laboratory_test_id ON laboratory(test_id);
-
--- ====================================
--- 7. Staff Table
--- ====================================
-CREATE TABLE staff (
-    staff_id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50),
-    staff_role VARCHAR(100) NOT NULL,
-    contact_number VARCHAR(15),
+-- ===============================
+-- 4. Medicine Table (base table)
+-- ===============================
+CREATE TABLE medicine (
+    medicine_id SERIAL PRIMARY KEY,
+    medicine_name VARCHAR(100) NOT NULL,
+    dosage VARCHAR(50),
+    manufacturer VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ====================================
--- 8. Prescription Table
--- ====================================
-CREATE TABLE prescription (
-    prescription_id SERIAL PRIMARY KEY,
-    patient_id INT NOT NULL,
-    doctor_id INT NOT NULL,
-    patient_procedure VARCHAR(400) NOT NULL,
-    procedure_date DATE NOT NULL,
-    next_appointment DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
-);
-
--- Index on prescription_id for faster lookups
-CREATE INDEX idx_prescription_id ON prescription(prescription_id);
-
--- ====================================
--- 9. Administrator Table
--- ====================================
-CREATE TABLE administrator (
-    admin_id SERIAL PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100),
-    contact_no VARCHAR(15),
+-- ===============================
+-- 5. Supplier Table (base table)
+-- ===============================
+CREATE TABLE supplier (
+    supplier_id SERIAL PRIMARY KEY,
+    supplier_name VARCHAR(100) NOT NULL,
+    contact_no VARCHAR(15) NOT NULL,
+    email VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- ====================================
--- 10. Medical History Table
--- ====================================
+-- Now create tables with foreign key dependencies
+
+-- ===============================
+-- 6. Appointment Table (depends on patient and doctor)
+-- ===============================
+CREATE TABLE appointment (
+    appointment_id SERIAL PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
+    appointment_status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_patient
+        FOREIGN KEY(patient_id) 
+        REFERENCES patient(patient_id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_doctor
+        FOREIGN KEY(doctor_id) 
+        REFERENCES doctor(doctor_id)
+);
+
+-- ===============================
+-- 7. Medical History Table (depends on patient and doctor)
+-- ===============================
 CREATE TABLE medical_history (
     record_id SERIAL PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -143,63 +95,118 @@ CREATE TABLE medical_history (
     admission_date DATE NOT NULL,
     discharge_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctor(doctor_id) ON DELETE CASCADE
+    CONSTRAINT fk_medical_patient
+        FOREIGN KEY(patient_id) 
+        REFERENCES patient(patient_id),
+    CONSTRAINT fk_medical_doctor
+        FOREIGN KEY(doctor_id) 
+        REFERENCES doctor(doctor_id)
 );
 
--- Index on medical_history record_id for faster lookups
-CREATE INDEX idx_medical_history_id ON medical_history(record_id);
-
--- ====================================
--- 11. Medicine Table
--- ====================================
-CREATE TABLE medicine (
-    medicine_id SERIAL PRIMARY KEY,
-    medicine_name VARCHAR(100) NOT NULL,
-    dosage VARCHAR(50),
-    manufacturer VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- ===============================
+-- 8. Prescription Table (depends on patient and doctor)
+-- ===============================
+CREATE TABLE prescription (
+    prescription_id SERIAL PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    patient_procedure VARCHAR(400) NOT NULL,
+    procedure_date DATE NOT NULL,
+    next_appointment DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_prescription_patient
+        FOREIGN KEY(patient_id) 
+        REFERENCES patient(patient_id),
+    CONSTRAINT fk_prescription_doctor
+        FOREIGN KEY(doctor_id) 
+        REFERENCES doctor(doctor_id)
 );
 
--- ====================================
--- 12. Supplier Table
--- ====================================
-CREATE TABLE supplier (
-    supplier_id SERIAL PRIMARY KEY,
-    supplier_name VARCHAR(100) NOT NULL,
-    contact_no VARCHAR(15) NOT NULL,
-    email VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- ===============================
+-- 9. Laboratory Table (depends on patient and doctor)
+-- ===============================
+CREATE TABLE laboratory (
+    test_id SERIAL PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NOT NULL,
+    test_name VARCHAR(100),
+    test_date DATE NOT NULL,
+    test_time TIME NOT NULL,
+    test_result VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_lab_patient
+        FOREIGN KEY(patient_id) 
+        REFERENCES patient(patient_id),
+    CONSTRAINT fk_lab_doctor
+        FOREIGN KEY(doctor_id) 
+        REFERENCES doctor(doctor_id)
 );
 
--- ====================================
--- 13. Room Table
--- ====================================
+-- ===============================
+-- 10. Room Table (depends on patient)
+-- ===============================
 CREATE TABLE room (
     room_id SERIAL PRIMARY KEY,
     patient_id INT NOT NULL,
     room_number INT NOT NULL,
     room_type VARCHAR(100),
-    status VARCHAR(50) CHECK (status IN ('Occupied', 'Vacant')),
+    status VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE
+    CONSTRAINT fk_room_patient
+        FOREIGN KEY(patient_id) 
+        REFERENCES patient(patient_id)
 );
 
--- ====================================
--- 14. Payment Table
--- ====================================
+-- ===============================
+-- 11. Payment Table (depends on patient)
+-- ===============================
 CREATE TABLE payment (
     payment_id SERIAL PRIMARY KEY,
     patient_id INT NOT NULL,
     amount DECIMAL(10, 2),
     payment_status VARCHAR(10) CHECK (payment_status IN ('Paid', 'Pending')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patient(patient_id) ON DELETE CASCADE
+    CONSTRAINT fk_payment_patient
+        FOREIGN KEY(patient_id) 
+        REFERENCES patient(patient_id)
 );
 
--- ====================================
--- 15. Parking Table
--- ====================================
+-- ===============================
+-- 12. Staff Table (independent)
+-- ===============================
+CREATE TABLE staff (
+    staff_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50),
+    staff_role VARCHAR(100) NOT NULL,
+    contact_number VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 13. Receptionist Table (independent)
+-- ===============================
+CREATE TABLE reception (
+    receptionist_id SERIAL PRIMARY KEY,
+    receptionist_name VARCHAR(100) NOT NULL,
+    contact_no VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 14. Administrator Table (independent)
+-- ===============================
+CREATE TABLE administrator (
+    admin_id SERIAL PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100),
+    contact_no VARCHAR(15),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ===============================
+-- 15. Parking Table (independent)
+-- ===============================
 CREATE TABLE parking (
     driver_id SERIAL PRIMARY KEY,
     driver_name VARCHAR(100) NOT NULL,
@@ -209,4 +216,5 @@ CREATE TABLE parking (
     exit_time TIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 
